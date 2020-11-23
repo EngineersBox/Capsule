@@ -22,6 +22,6 @@ func main() {
 	case "child":
 		con.SpawnChild(os.Args)
 	default:
-		panic("wat should I do")
+		panic("Unknown command")
 	}
 }
