@@ -4,4 +4,5 @@ package main
 type Properties struct {
 	fsname  string
 	procMax string
+	memMax  string
 }

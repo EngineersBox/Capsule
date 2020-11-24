@@ -12,8 +12,16 @@ func call(inv Invocable, params ...interface{}) {
 	handleErrors(inv(params))
 }
 
+// HandleErrors ... Invoke a panic call if an error is thrown
 func handleErrors(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+// HandledInvocationGroup ... Handle errors for an arbitrary size invocable group
+func handledInvocationGroup(throwables ...error) {
+	for i, err := range throwables {
+		handleErrors(err)
 	}
 }

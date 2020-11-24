@@ -7,9 +7,12 @@ import (
 )
 
 var (
-	cid   string     = "container"
-	props Properties = Properties{"rootfs", "20"}
-	con   *Container = nil
+	props Properties = Properties{
+		fsname:  "rootfs",
+		procMax: "20",
+		memMax:  "4096",
+	}
+	con *Container = nil
 )
 
 func main() {
@@ -17,7 +20,11 @@ func main() {
 	case "run":
 		newUUID, err := uuid.NewRandom()
 		handleErrors(err)
-		con = &Container{newUUID, "container"}
+		con = &Container{
+			newUUID,
+			"container",
+			0x00010001,
+		}
 		con.Run(os.Args)
 	case "child":
 		con.SpawnChild(os.Args)
