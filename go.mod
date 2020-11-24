@@ -1,4 +1,4 @@
-module github.com/EngineersBox/Capsule
+module capsule
 
 go 1.15
 

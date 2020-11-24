@@ -1,6 +1,7 @@
 package main
 
 import (
+	capsule "capsule/src/lib"
 	"log"
 	"math/rand"
 	"os"
@@ -13,25 +14,27 @@ func panicWrapper(err error) {
 }
 
 var (
-	props   Properties
-	con     *Container
-	invoker Invoker = Invoker{
+	props   capsule.Properties
+	con     *capsule.Container
+	invoker capsule.Invoker = capsule.Invoker{
 		panicWrapper,
 		log.Printf,
 	}
 )
 
 func main() {
-	props.readFromJSON("container_properties.json")
+	props.ReadFromJSON("container_properties.json")
 	switch os.Args[1] {
 	case "run":
 		newUUID, err := uuid.NewRandom()
-		invoker.handleErrors(err)
+		invoker.HandleErrors(err)
 		con = &Container{
 			newUUID,
 			"container",
+			RunState{false, false},
 			rand.Intn(255),
 			invoker,
+			props,
 		}
 		con.Run(os.Args)
 	case "child":

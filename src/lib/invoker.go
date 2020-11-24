@@ -1,4 +1,4 @@
-package main
+package capsule
 
 // ErrorHandlerFunc ... Function to process an error
 type ErrorHandlerFunc func(error)
@@ -19,21 +19,30 @@ type Invocable func(...interface{}) error
 //
 // Params:
 // - Invocable inv: Function to invoke
-// - ...InvParams params: Parameters to pass to given function
-func (i *Invoker) call(inv Invocable, params ...interface{}) {
-	i.handleErrors(inv(params))
+// - ...interface{} params: Parameters to pass to given function
+func (i *Invoker) Call(inv Invocable, params ...interface{}) {
+	i.HandleErrors(inv(params))
 }
 
 // HandleErrors ... Invoke a panic call if an error is thrown
-func (i *Invoker) handleErrors(err error) {
+func (i *Invoker) HandleErrors(err error) {
 	if err != nil {
 		i.errorHandler(err)
 	}
 }
 
 // HandledInvocationGroup ... Handle errors for an arbitrary size invocable group
-func (i *Invoker) handledInvocationGroup(throwables ...error) {
+func (i *Invoker) HandledInvocationGroup(throwables ...error) {
 	for _, err := range throwables {
-		i.handleErrors(err)
+		i.HandleErrors(err)
+	}
+}
+
+// AsyncHandledInvocationGroup ... Asynchronously handle errors for an arbitrary size invocable group
+func (i *Invoker) AsyncHandledInvocationGroup(throwables ...error) {
+	for _, err := range throwables {
+		go func(err error) {
+			i.HandleErrors(err)
+		}(err)
 	}
 }

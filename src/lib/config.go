@@ -1,4 +1,4 @@
-package main
+package capsule
 
 import (
 	"encoding/json"
@@ -14,7 +14,8 @@ type Properties struct {
 	memMax  string
 }
 
-func (p *Properties) readFromJSON(filename string) {
+// ReadFromJSON ... Parse from structured JSON file to current instance of Properties
+func (p *Properties) ReadFromJSON(filename string) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
