@@ -13,19 +13,16 @@ func panicWrapper(err error) {
 }
 
 var (
-	props Properties = Properties{
-		fsname:  "rootfs",
-		procMax: "20",
-		memMax:  "4096",
-	}
-	con     *Container = nil
-	invoker Invoker    = Invoker{
+	props   Properties
+	con     *Container
+	invoker Invoker = Invoker{
 		panicWrapper,
 		log.Printf,
 	}
 )
 
 func main() {
+	props.readFromJSON("container_properties.json")
 	switch os.Args[1] {
 	case "run":
 		newUUID, err := uuid.NewRandom()

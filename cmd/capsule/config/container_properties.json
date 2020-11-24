@@ -1,0 +1,5 @@
+{
+    "fsname": "rootfs",
+    "procMax": "20",
+    "memMax": "4096"
+}
