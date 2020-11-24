@@ -1,10 +1,16 @@
 package main
 
 import (
+	"log"
+	"math/rand"
 	"os"
 
 	"github.com/google/uuid"
 )
+
+func panicWrapper(err error) {
+	panic(err)
+}
 
 var (
 	props Properties = Properties{
@@ -12,18 +18,23 @@ var (
 		procMax: "20",
 		memMax:  "4096",
 	}
-	con *Container = nil
+	con     *Container = nil
+	invoker Invoker    = Invoker{
+		panicWrapper,
+		log.Printf,
+	}
 )
 
 func main() {
 	switch os.Args[1] {
 	case "run":
 		newUUID, err := uuid.NewRandom()
-		handleErrors(err)
+		invoker.handleErrors(err)
 		con = &Container{
 			newUUID,
 			"container",
-			0x00010001,
+			rand.Intn(255),
+			invoker,
 		}
 		con.Run(os.Args)
 	case "child":

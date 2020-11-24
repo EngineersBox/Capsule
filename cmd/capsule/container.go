@@ -14,9 +14,10 @@ import (
 
 // Container ... Containerized instance of a linux file system
 type Container struct {
-	id   uuid.UUID
-	name string
-	cls  int
+	id      uuid.UUID
+	name    string
+	cls     int
+	invoker Invoker
 }
 
 // Run ... Fork-execute a fs instance
@@ -34,14 +35,14 @@ func (c *Container) Run(args []string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	handleErrors(cmd.Run())
+	c.invoker.handleErrors(cmd.Run())
 }
 
 // SpawnChild ... Spawn a child process within the fs instance created via run()
 func (c *Container) SpawnChild(args []string) {
 	log.Printf("Running in new UTS namespace %v as %d\n", args[2:], os.Getpid())
 
-	handledInvocationGroup(
+	c.invoker.handledInvocationGroup(
 		syscall.Sethostname([]byte(c.name)),
 		syscall.Chroot("/root/"+props.fsname),
 		syscall.Chdir("/"), // set the working directory inside container
@@ -53,8 +54,8 @@ func (c *Container) SpawnChild(args []string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	handleErrors(cmd.Run())
-	handleErrors(syscall.Unmount(props.fsname, 0))
+	c.invoker.handleErrors(cmd.Run())
+	c.invoker.handleErrors(syscall.Unmount(props.fsname, 0))
 }
 
 // CreateCGroup ... Create a CGroup for the spawned process
@@ -64,7 +65,7 @@ func (c *Container) CreateCGroup() {
 	memory := filepath.Join(cgroups, "memory")
 	netCls := filepath.Join(cgroups, "net_cls")
 
-	handledInvocationGroup(
+	c.invoker.handledInvocationGroup(
 		// Create CGroup sub-directory
 		os.Mkdir(filepath.Join(pids, c.name), 0755),
 		// Set maximum child processes
