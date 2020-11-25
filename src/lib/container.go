@@ -50,7 +50,7 @@ func (c *Container) Run(args []string) {
 			{ContainerID: 0, HostID: os.Getuid(), Size: 1},
 		},
 		GidMappings: []syscall.SysProcIDMap{
-			{ContainerID: 0, HostID: os.Getuid(), Size: 1},
+			{ContainerID: 0, HostID: os.Getgid(), Size: 1},
 		},
 	}
 	cmd.Stdin = os.Stdin
