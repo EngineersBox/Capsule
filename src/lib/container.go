@@ -30,9 +30,10 @@ type Container struct {
 	name    string
 	state   RunState
 	cls     int
-	invoker Invoker
+	handler Handler
 	props   Properties
 	m       sync.Mutex
+	im      ImageManager
 }
 
 // Run ... Fork-execute an fs instance
@@ -57,7 +58,7 @@ func (c *Container) Run(args []string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	c.invoker.HandleErrors(cmd.Run())
+	c.handler.HandleErrors(cmd.Run())
 	c.state.running = true
 }
 
@@ -65,7 +66,7 @@ func (c *Container) Run(args []string) {
 func (c *Container) SpawnChild(args []string) {
 	log.Printf("Running in new UTS namespace %v as %d\n", args[2:], os.Getpid())
 
-	c.invoker.HandledInvocationGroup(
+	c.handler.HandledInvocationGroup(
 		syscall.Sethostname([]byte(c.name)),
 		syscall.Chroot("/root/"+c.props.fsname),
 		syscall.Chdir("/"), // set the working directory inside container
@@ -77,8 +78,8 @@ func (c *Container) SpawnChild(args []string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	c.invoker.HandleErrors(cmd.Run())
-	c.invoker.HandleErrors(syscall.Unmount(c.props.fsname, 0))
+	c.handler.HandleErrors(cmd.Run())
+	c.handler.HandleErrors(syscall.Unmount(c.props.fsname, 0))
 
 	c.state.hasChild = true
 }
@@ -90,7 +91,7 @@ func (c *Container) CreateCGroup() {
 	memory := filepath.Join(cgroups, "memory")
 	netCls := filepath.Join(cgroups, "net_cls")
 
-	c.invoker.HandledInvocationGroup(
+	c.handler.HandledInvocationGroup(
 		// Create CGroup sub-directory
 		os.Mkdir(filepath.Join(pids, c.name), mkdirPerm),
 		// Set maximum child processes
@@ -107,4 +108,10 @@ func (c *Container) CreateCGroup() {
 		// Set the network id to identify packets from this container
 		ioutil.WriteFile(filepath.Join(netCls, c.name+"net_cls.classid"), []byte(string(c.cls)), writeFilePerm),
 	)
+}
+
+// LoadDiskImage ... Load an ISO image to create a containerized image
+func (c *Container) LoadDiskImage(diskImg string) {
+	c.im.CreateIso(diskImg)
+	log.Println("Load disk image: [%s]", c.im.volumeLabel)
 }
