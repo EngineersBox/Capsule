@@ -15,6 +15,7 @@ import (
 const (
 	mkdirPerm     os.FileMode = 0755
 	writeFilePerm os.FileMode = 0700
+	cgroupsDir    string      = "/sys/fs/cgroup/"
 )
 
 // RunState ... Object describing state of a container
@@ -82,12 +83,31 @@ func (c *Container) SpawnChild(args []string) {
 	c.State.HasChild = true
 }
 
+// AssignCGroupMemoryAttributes ... Assign attribute values for memory usage and limiting
+func (c *Container) AssignCGroupMemoryAttributes() {
+	memory := filepath.Join(cgroupsDir, "memory")
+	c.Handler.HandledInvocationGroup(
+		// Create memory sub-directory
+		os.Mkdir(filepath.Join(memory, c.Name), mkdirPerm),
+		// Set the maximum memory for the container
+		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
+	)
+}
+
+// AssignCGroupNetClsAttributes ... Assign attribute values for packet identification
+func (c *Container) AssignCGroupNetClsAttributes() {
+	netCls := filepath.Join(cgroupsDir, "net_cls")
+	c.Handler.HandledInvocationGroup(
+		// Create net_cls sub-directory
+		os.Mkdir(filepath.Join(netCls, c.Name), mkdirPerm),
+		// Set the network id to identify packets from this container
+		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(string(c.Cls)), writeFilePerm),
+	)
+}
+
 // CreateCGroup ... Create a CGroup for the spawned process
 func (c *Container) CreateCGroup() {
-	cgroups := "/sys/fs/cgroup/"
-	pids := filepath.Join(cgroups, "pids")
-	memory := filepath.Join(cgroups, "memory")
-	netCls := filepath.Join(cgroups, "net_cls")
+	pids := filepath.Join(cgroupsDir, "pids")
 
 	c.Handler.HandledInvocationGroup(
 		// Create CGroup sub-directory
@@ -97,15 +117,9 @@ func (c *Container) CreateCGroup() {
 		// Delete the CGroup if there are no processes running
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/notify_on_release"), []byte("1"), writeFilePerm),
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), writeFilePerm),
-		// Create memory sub-directory
-		os.Mkdir(filepath.Join(memory, c.Name), mkdirPerm),
-		// Set the maximum memory for the container
-		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
-		// Create net_cls sub-directory
-		os.Mkdir(filepath.Join(netCls, c.Name), mkdirPerm),
-		// Set the network id to identify packets from this container
-		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(string(c.Cls)), writeFilePerm),
 	)
+	c.AssignCGroupMemoryAttributes()
+	c.AssignCGroupNetClsAttributes()
 }
 
 // LoadDiskImage ... Load an ISO image to create a containerized image
