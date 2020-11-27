@@ -8,8 +8,8 @@ type InfoHandlerFunc func(string, ...interface{})
 
 // Handler ... Call handler
 type Handler struct {
-	errorHandler ErrorHandlerFunc
-	infoHanlder  InfoHandlerFunc
+	ErrorHandler ErrorHandlerFunc
+	InfoHandler  InfoHandlerFunc
 }
 
 // Handlable ... Abstract generic function that can be invoked
@@ -27,7 +27,7 @@ func (h *Handler) Call(inv Handlable, params ...interface{}) {
 // HandleErrors ... Invoke a panic call if an error is thrown
 func (h *Handler) HandleErrors(err error) {
 	if err != nil {
-		h.errorHandler(err)
+		h.ErrorHandler(err)
 	}
 }
 

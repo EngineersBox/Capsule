@@ -7,19 +7,16 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/diskfs/go-diskfs/filesystem"
 )
-
-func panicWrapper(err error) {
-	panic(err)
-}
 
 var (
 	props   capsule.Properties
 	con     *capsule.Container
 	handler capsule.Handler = capsule.Handler{
-		panicWrapper,
-		log.Printf,
+		ErrorHandler: func(err error) {
+			panic(err)
+		},
+		InfoHandler: log.Printf,
 	}
 )
 
@@ -29,18 +26,21 @@ func main() {
 	case "run":
 		newUUID, err := uuid.NewRandom()
 		handler.HandleErrors(err)
-		con = &Container{
-			newUUID,
-			"container",
-			RunState{false, false},
-			rand.Intn(255),
-			handler,
-			props,
-			ImageManager{
-				"container",
-				nil,
-				filesystem.FileSystem{},
-			}
+		con = &capsule.Container{
+			ID:   newUUID,
+			Name: "container",
+			State: capsule.RunState{
+				Running:  false,
+				HasChild: false,
+			},
+			Cls:     rand.Intn(255),
+			Handler: handler,
+			Props:   props,
+			Im: capsule.ImageManager{
+				VolumeLabel: "container",
+				FsDisk:      nil,
+				Fs:          nil,
+			},
 		}
 		con.Run(os.Args)
 	case "child":

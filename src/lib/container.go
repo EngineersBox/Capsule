@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"syscall"
 
 	"github.com/google/uuid"
@@ -20,20 +19,19 @@ const (
 
 // RunState ... Object describing state of a container
 type RunState struct {
-	running  bool
-	hasChild bool
+	Running  bool
+	HasChild bool
 }
 
 // Container ... Containerized instance of a linux file system
 type Container struct {
-	id      uuid.UUID
-	name    string
-	state   RunState
-	cls     int
-	handler Handler
-	props   Properties
-	m       sync.Mutex
-	im      ImageManager
+	ID      uuid.UUID
+	Name    string
+	State   RunState
+	Cls     int
+	Handler Handler
+	Props   Properties
+	Im      ImageManager
 }
 
 // Run ... Fork-execute an fs instance
@@ -58,17 +56,17 @@ func (c *Container) Run(args []string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	c.handler.HandleErrors(cmd.Run())
-	c.state.running = true
+	c.Handler.HandleErrors(cmd.Run())
+	c.State.Running = true
 }
 
 // SpawnChild ... Spawn a child process within the fs instance created via run()
 func (c *Container) SpawnChild(args []string) {
 	log.Printf("Running in new UTS namespace %v as %d\n", args[2:], os.Getpid())
 
-	c.handler.HandledInvocationGroup(
-		syscall.Sethostname([]byte(c.name)),
-		syscall.Chroot("/root/"+c.props.fsname),
+	c.Handler.HandledInvocationGroup(
+		syscall.Sethostname([]byte(c.Name)),
+		syscall.Chroot("/root/"+c.Props.fsname),
 		syscall.Chdir("/"), // set the working directory inside container
 		syscall.Mount("proc", "proc", "proc", 0, ""),
 	)
@@ -78,10 +76,10 @@ func (c *Container) SpawnChild(args []string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	c.handler.HandleErrors(cmd.Run())
-	c.handler.HandleErrors(syscall.Unmount(c.props.fsname, 0))
+	c.Handler.HandleErrors(cmd.Run())
+	c.Handler.HandleErrors(syscall.Unmount(c.Props.fsname, 0))
 
-	c.state.hasChild = true
+	c.State.HasChild = true
 }
 
 // CreateCGroup ... Create a CGroup for the spawned process
@@ -91,27 +89,27 @@ func (c *Container) CreateCGroup() {
 	memory := filepath.Join(cgroups, "memory")
 	netCls := filepath.Join(cgroups, "net_cls")
 
-	c.handler.HandledInvocationGroup(
+	c.Handler.HandledInvocationGroup(
 		// Create CGroup sub-directory
-		os.Mkdir(filepath.Join(pids, c.name), mkdirPerm),
+		os.Mkdir(filepath.Join(pids, c.Name), mkdirPerm),
 		// Set maximum child processes
-		ioutil.WriteFile(filepath.Join(pids, c.name+"/pids.max"), []byte(c.props.procMax), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(c.Props.procMax), writeFilePerm),
 		// Delete the CGroup if there are no processes running
-		ioutil.WriteFile(filepath.Join(pids, c.name+"/notify_on_release"), []byte("1"), writeFilePerm),
-		ioutil.WriteFile(filepath.Join(pids, c.name+"/cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(pids, c.Name+"/notify_on_release"), []byte("1"), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(pids, c.Name+"/cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), writeFilePerm),
 		// Create memory sub-directory
-		os.Mkdir(filepath.Join(memory, c.name), mkdirPerm),
+		os.Mkdir(filepath.Join(memory, c.Name), mkdirPerm),
 		// Set the maximum memory for the container
-		ioutil.WriteFile(filepath.Join(memory, c.name+"memory.limit_in_bytes"), []byte(c.props.memMax), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
 		// Create net_cls sub-directory
-		os.Mkdir(filepath.Join(netCls, c.name), mkdirPerm),
+		os.Mkdir(filepath.Join(netCls, c.Name), mkdirPerm),
 		// Set the network id to identify packets from this container
-		ioutil.WriteFile(filepath.Join(netCls, c.name+"net_cls.classid"), []byte(string(c.cls)), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(string(c.Cls)), writeFilePerm),
 	)
 }
 
 // LoadDiskImage ... Load an ISO image to create a containerized image
 func (c *Container) LoadDiskImage(diskImg string) {
-	c.im.CreateIso(diskImg)
-	log.Println("Load disk image: [%s]", c.im.volumeLabel)
+	c.Im.CreateIso(diskImg)
+	log.Println("Load disk image: [%s]", c.Im.VolumeLabel)
 }

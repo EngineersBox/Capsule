@@ -3,7 +3,7 @@ package capsule
 import (
 	"log"
 
-	unix "golang.org/x/sys/unix"
+	"golang.org/x/sys/unix"
 )
 
 func panicWrapper(err error) {
@@ -17,17 +17,17 @@ var handler Handler = Handler{
 
 // FSManager ... A manager to handle filesystem operations
 type FSManager struct {
-	fsRoot     string
-	connection unix.FdSet
-	mountID    int
+	FsRoot     string
+	Connection unix.FdSet
+	MountID    int
 }
 
 func (f *FSManager) mountFS() {
-	conn, mid, err := unix.NameToFileHandle(0, f.fsRoot, 0)
+	conn, mid, err := unix.NameToFileHandle(0, f.FsRoot, 0)
 	handler.HandleErrors(err)
 
-	f.connection = conn
-	f.mountID = mid
+	f.Connection = conn
+	f.MountID = mid
 
-	unix.Mount(f.fsRoot, "root", "fuse", 0, "")
+	unix.Mount(f.FsRoot, "root", "fuse", 0, "")
 }

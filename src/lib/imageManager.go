@@ -13,9 +13,9 @@ import (
 
 // ImageManager ... Create/destroy/manipulate disk images
 type ImageManager struct {
-	volumeLabel string
-	fsDisk      *disk.Disk
-	fs          filesystem.FileSystem
+	VolumeLabel string
+	FsDisk      *disk.Disk
+	Fs          filesystem.FileSystem
 }
 
 // CreateIso ... Create an ISO9660 disk image
@@ -27,26 +27,26 @@ func (i *ImageManager) CreateIso(diskImg string) {
 	diskSize = 10 * 1024 * 1024 // 10 MB
 	newDisk, err := diskfs.Create(diskImg, diskSize, diskfs.Raw)
 	handler.HandleErrors(err)
-	i.fsDisk = newDisk
+	i.FsDisk = newDisk
 
 	// the following line is required for an ISO, which may have logical block sizes
 	// only of 2048, 4096, 8192
-	i.fsDisk.LogicalBlocksize = 2048
+	i.FsDisk.LogicalBlocksize = 2048
 	fspec := disk.FilesystemSpec{
 		Partition:   0,
 		FSType:      filesystem.TypeISO9660,
-		VolumeLabel: i.volumeLabel,
+		VolumeLabel: i.VolumeLabel,
 	}
-	newFs, err := i.fsDisk.CreateFilesystem(fspec)
+	newFs, err := i.FsDisk.CreateFilesystem(fspec)
 	handler.HandleErrors(err)
-	i.fs = newFs
+	i.Fs = newFs
 
-	rw, err := i.fs.OpenFile("demo.txt", os.O_CREATE|os.O_RDWR)
+	rw, err := i.Fs.OpenFile("demo.txt", os.O_CREATE|os.O_RDWR)
 	content := []byte("demo")
 	_, err = rw.Write(content)
 	handler.HandleErrors(err)
 
-	iso, ok := i.fs.(*iso9660.FileSystem)
+	iso, ok := i.Fs.(*iso9660.FileSystem)
 	if !ok {
 		handler.HandleErrors(fmt.Errorf("not an iso9660 filesystem"))
 	}
