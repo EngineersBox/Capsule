@@ -95,7 +95,7 @@ func (c *Container) AssignCGroupMemoryAttributes() {
 	memory := filepath.Join(cgroupsDir, "memory")
 	// Create memory sub-directory
 	MkdirCond(filepath.Join(memory, c.Name), mkdirPerm)
-	c.Handler.HandledInvocationGroup(
+	c.Handler.HandleErrors(
 		// Set the maximum memory for the container
 		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
 	)
@@ -106,7 +106,7 @@ func (c *Container) AssignCGroupNetClsAttributes() {
 	netCls := filepath.Join(cgroupsDir, "net_cls")
 	// Create net_cls sub-directory
 	MkdirCond(filepath.Join(netCls, c.Name), mkdirPerm)
-	c.Handler.HandledInvocationGroup(
+	c.Handler.HandleErrors(
 		// Set the network id to identify packets from this container
 		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(string(c.Cls)), writeFilePerm),
 	)

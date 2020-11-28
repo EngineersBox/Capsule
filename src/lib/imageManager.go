@@ -31,8 +31,8 @@ type ImageManager struct {
 	Fs          filesystem.FileSystem
 }
 
-// CreateNewFileSystem ... Create an ISO9660 compatible filespace with a single partition
-func (i *ImageManager) CreateNewFileSystem() {
+// CreateISOFileSystem ... Create an ISO9660 compatible filespace with a single partition
+func (i *ImageManager) CreateISOFileSystem() {
 	// the following line is required for an ISO, which may have logical block sizes
 	// only of 2048, 4096, 8192
 	i.FsDisk.LogicalBlocksize = blockSizes.Bs2048
@@ -65,7 +65,7 @@ func (i *ImageManager) CreateIso(diskImg string) {
 	handler.HandleErrors(err)
 	i.FsDisk = newDisk
 
-	i.CreateNewFileSystem()
+	i.CreateISOFileSystem()
 
 	iso, ok := i.Fs.(*iso9660.FileSystem)
 	if !ok {
