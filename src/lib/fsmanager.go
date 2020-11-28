@@ -18,15 +18,14 @@ var handler Handler = Handler{
 // FSManager ... A manager to handle filesystem operations
 type FSManager struct {
 	FsRoot     string
-	Connection unix.FdSet
+	Connection unix.FileHandle
 	MountID    int
 }
 
-// CreateFS ... Create a filesystem at the root specified at FSManager.FsRoot
-func (f *FSManager) CreateFS() {
-	conn, mid, err := unix.NameToFileHandle(0, f.FsRoot, 0)
+// CreateHandle ... Create a filesystem at the root specified at FSManager.FsRoot
+func (f *FSManager) CreateHandle() {
+	conn, mid, err := unix.NameToHandleAt(0, f.FsRoot, 0)
 	handler.HandleErrors(err)
-
 	f.Connection = conn
 	f.MountID = mid
 }
