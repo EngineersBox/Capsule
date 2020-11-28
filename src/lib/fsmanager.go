@@ -23,11 +23,5 @@ type FSManager struct {
 }
 
 func (f *FSManager) mountFS() {
-	conn, mid, err := unix.NameToFileHandle(0, f.FsRoot, 0)
-	handler.HandleErrors(err)
-
-	f.Connection = conn
-	f.MountID = mid
-
 	unix.Mount(f.FsRoot, "root", "fuse", 0, "")
 }
