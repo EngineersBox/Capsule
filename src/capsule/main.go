@@ -21,7 +21,7 @@ var (
 )
 
 func main() {
-	props.ReadFromJSON("container_properties.json")
+	props.ReadFromJSON("config/container_properties.json")
 	switch os.Args[1] {
 	case "run":
 		newUUID, err := uuid.NewRandom()
