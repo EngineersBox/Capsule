@@ -83,12 +83,19 @@ func (c *Container) SpawnChild(args []string) {
 	c.State.HasChild = true
 }
 
+// MkdirCond ... Create a directory if it does not exist
+func MkdirCond(path string, mode os.FileMode) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.Mkdir(path, mode)
+	}
+}
+
 // AssignCGroupMemoryAttributes ... Assign attribute values for memory usage and limiting
 func (c *Container) AssignCGroupMemoryAttributes() {
 	memory := filepath.Join(cgroupsDir, "memory")
+	// Create memory sub-directory
+	MkdirCond(filepath.Join(memory, c.Name), mkdirPerm)
 	c.Handler.HandledInvocationGroup(
-		// Create memory sub-directory
-		os.Mkdir(filepath.Join(memory, c.Name), mkdirPerm),
 		// Set the maximum memory for the container
 		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
 	)
@@ -97,9 +104,9 @@ func (c *Container) AssignCGroupMemoryAttributes() {
 // AssignCGroupNetClsAttributes ... Assign attribute values for packet identification
 func (c *Container) AssignCGroupNetClsAttributes() {
 	netCls := filepath.Join(cgroupsDir, "net_cls")
+	// Create net_cls sub-directory
+	MkdirCond(filepath.Join(netCls, c.Name), mkdirPerm)
 	c.Handler.HandledInvocationGroup(
-		// Create net_cls sub-directory
-		os.Mkdir(filepath.Join(netCls, c.Name), mkdirPerm),
 		// Set the network id to identify packets from this container
 		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(string(c.Cls)), writeFilePerm),
 	)
@@ -108,10 +115,10 @@ func (c *Container) AssignCGroupNetClsAttributes() {
 // CreateCGroup ... Create a CGroup for the spawned process
 func (c *Container) CreateCGroup() {
 	pids := filepath.Join(cgroupsDir, "pids")
+	// Create CGroup sub-directory
+	MkdirCond(filepath.Join(pids, c.Name), mkdirPerm)
 
 	c.Handler.HandledInvocationGroup(
-		// Create CGroup sub-directory
-		os.Mkdir(filepath.Join(pids, c.Name), mkdirPerm),
 		// Set maximum child processes
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(c.Props.procMax), writeFilePerm),
 		// Delete the CGroup if there are no processes running
