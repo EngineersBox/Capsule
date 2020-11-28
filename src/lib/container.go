@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/google/uuid"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -66,10 +67,10 @@ func (c *Container) SpawnChild(args []string) {
 	log.Printf("Running in new UTS namespace %v as %d\n", args[2:], os.Getpid())
 
 	c.Handler.HandledInvocationGroup(
-		syscall.Sethostname([]byte(c.Name)),
-		syscall.Chroot("/root/"+c.Props.fsname),
-		syscall.Chdir("/"), // set the working directory inside container
-		syscall.Mount("proc", "proc", "proc", 0, ""),
+		unix.Sethostname([]byte(c.Name)),
+		unix.Chroot("/root/"+c.Props.fsname),
+		unix.Chdir("/"), // set the working directory inside container
+		unix.Mount("proc", "proc", "proc", 0, ""),
 	)
 
 	cmd := exec.Command(args[2], args[3:]...)
@@ -78,7 +79,7 @@ func (c *Container) SpawnChild(args []string) {
 	cmd.Stderr = os.Stderr
 
 	c.Handler.HandleErrors(cmd.Run())
-	c.Handler.HandleErrors(syscall.Unmount(c.Props.fsname, 0))
+	c.Handler.HandleErrors(unix.Unmount(c.Props.fsname, 0))
 
 	c.State.HasChild = true
 }
@@ -86,7 +87,7 @@ func (c *Container) SpawnChild(args []string) {
 // MkdirCond ... Create a directory if it does not exist
 func MkdirCond(path string, mode os.FileMode) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, mode)
+		unix.Mkdir(path, uint32(mode))
 	}
 }
 
@@ -132,5 +133,5 @@ func (c *Container) CreateCGroup() {
 // LoadDiskImage ... Load an ISO image to create a containerized image
 func (c *Container) LoadDiskImage(diskImg string) {
 	c.Im.CreateIso(diskImg)
-	log.Println("Load disk image: [%s]", c.Im.VolumeLabel)
+	log.Printf("Load disk image: [%s]\n", c.Im.VolumeLabel)
 }
