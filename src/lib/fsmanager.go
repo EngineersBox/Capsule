@@ -24,11 +24,11 @@ type FSManager struct {
 
 // CreateFS ... Create a filesystem at the root specified at FSManager.FsRoot
 func (f *FSManager) CreateFS() {
-	// conn, mid, err := unix.NameToFileHandle(0, f.FsRoot, 0)
-	// handler.HandleErrors(err)
+	conn, mid, err := unix.NameToFileHandle(0, f.FsRoot, 0)
+	handler.HandleErrors(err)
 
-	// f.Connection = conn
-	// f.MountID = mid
+	f.Connection = conn
+	f.MountID = mid
 }
 
 // MountFS ... Mount the filesystem specified at FSManager.FsRoot as a FUSE filesystem
