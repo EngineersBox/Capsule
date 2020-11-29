@@ -1,5 +1,7 @@
 {
+    "containerName": "container",
     "fsname": "rootfs",
-    "procMax": "20",
-    "memMax": "4096"
+    "procMax": 20,
+    "memMax": 4096,
+    "terminateOnClose": true
 }

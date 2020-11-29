@@ -9,11 +9,15 @@ import (
 	"github.com/google/uuid"
 )
 
+func flattenArgs(a ...interface{}) []interface{} {
+	return a
+}
+
 var (
-	props capsule.Properties
-	con   capsule.Container = capsule.Container{
+	props capsule.Properties = capsule.ReadPropertiesFromJSON("config/container_properties.json")
+	con   capsule.Container  = capsule.Container{
 		ID:   flattenArgs(uuid.NewRandom())[0].(uuid.UUID),
-		Name: "container",
+		Name: props.ContainerName,
 		State: capsule.RunState{
 			Running:  false,
 			HasChild: false,
@@ -22,7 +26,7 @@ var (
 		Handler: handler,
 		Props:   props,
 		Im: capsule.ImageManager{
-			VolumeLabel: "container",
+			VolumeLabel: props.ContainerName,
 			FsDisk:      nil,
 			Fs:          nil,
 		},
@@ -35,12 +39,7 @@ var (
 	}
 )
 
-func flattenArgs(a ...interface{}) []interface{} {
-	return a
-}
-
 func main() {
-	props.ReadFromJSON("config/container_properties.json")
 	switch os.Args[1] {
 	case "run":
 		con.Run(os.Args)

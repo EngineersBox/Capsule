@@ -91,7 +91,11 @@ func (c *Container) AssignCGroupMemoryAttributes() {
 	os.MkdirAll(filepath.Join(memory, c.Name), mkdirPerm)
 	c.Handler.HandleErrors(
 		// Set the maximum memory for the container
-		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.MemMax), writeFilePerm),
+		ioutil.WriteFile(
+			filepath.Join(memory, c.Name+"/memory.limit_in_bytes"),
+			[]byte(strconv.Itoa(c.Props.MemMax)),
+			writeFilePerm,
+		),
 	)
 }
 
@@ -102,7 +106,11 @@ func (c *Container) AssignCGroupNetClsAttributes() {
 	os.MkdirAll(filepath.Join(netCls, c.Name), mkdirPerm)
 	c.Handler.HandleErrors(
 		// Set the network id to identify packets from this container
-		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(strconv.Itoa(c.Cls)), writeFilePerm),
+		ioutil.WriteFile(
+			filepath.Join(netCls, c.Name+"/net_cls.classid"),
+			[]byte(strconv.Itoa(c.Cls)),
+			writeFilePerm,
+		),
 	)
 }
 
@@ -111,13 +119,29 @@ func (c *Container) CreateCGroup() {
 	pids := filepath.Join(cgroupsDir, "pids")
 	// Create CGroup sub-directory
 	os.MkdirAll(filepath.Join(pids, c.Name), mkdirPerm)
-
+	// Whether to terminate the cgroup upon all processes terminating
+	willRelease := 1
+	if !c.Props.TerminateOnClose {
+		willRelease = 0
+	}
 	c.Handler.HandledInvocationGroup(
 		// Set maximum child processes
-		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(c.Props.ProcMax), writeFilePerm),
+		ioutil.WriteFile(
+			filepath.Join(pids, c.Name+"/pids.max"),
+			[]byte(strconv.Itoa(c.Props.ProcMax)),
+			writeFilePerm,
+		),
 		// Delete the CGroup if there are no processes running
-		ioutil.WriteFile(filepath.Join(pids, c.Name+"/notify_on_release"), []byte("1"), writeFilePerm),
-		ioutil.WriteFile(filepath.Join(pids, c.Name+"/cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), writeFilePerm),
+		ioutil.WriteFile(
+			filepath.Join(pids, c.Name+"/notify_on_release"),
+			[]byte(strconv.Itoa(willRelease)),
+			writeFilePerm,
+		),
+		ioutil.WriteFile(
+			filepath.Join(pids, c.Name+"/cgroup.procs"),
+			[]byte(strconv.Itoa(os.Getpid())),
+			writeFilePerm,
+		),
 	)
 	// c.AssignCGroupMemoryAttributes()
 	// c.AssignCGroupNetClsAttributes()

@@ -8,20 +8,25 @@ import (
 
 // Properties ... Global values to constrain containerization
 type Properties struct {
-	Fsname  string `json:"fsname"`
-	ProcMax string `json:"procMax"`
-	MemMax  string `json:"memMax"`
+	ContainerName    string `json:"containerName"`
+	Fsname           string `json:"fsname"`
+	ProcMax          int    `json:"procMax"`
+	MemMax           int    `json:"memMax"`
+	TerminateOnClose bool   `json:"terminateOnClose"`
 }
 
-// ReadFromJSON ... Parse from structured JSON file to current instance of Properties
-func (p *Properties) ReadFromJSON(filename string) {
+// ReadPropertiesFromJSON ... Parse from structured JSON file to current instance of Properties
+func ReadPropertiesFromJSON(filename string) Properties {
 	f, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
+	p := Properties{}
 	log.Printf("Reading containerization properties from [%s]\n", filename)
-	err = json.Unmarshal([]byte(f), p)
+	err = json.Unmarshal([]byte(f), &p)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Unmarshalled properties: %v\n", p)
+	return p
 }
