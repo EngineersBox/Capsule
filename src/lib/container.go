@@ -68,7 +68,7 @@ func (c *Container) SpawnChild(args []string) {
 
 	c.Handler.HandledInvocationGroup(
 		unix.Sethostname([]byte(c.Name)),
-		unix.Chroot("/root/"+c.Props.fsname),
+		unix.Chroot("/root/"+c.Props.Fsname),
 		unix.Chdir("/"), // set the working directory inside container
 		unix.Mount("proc", "proc", "proc", 0, ""),
 	)
@@ -79,7 +79,7 @@ func (c *Container) SpawnChild(args []string) {
 	cmd.Stderr = os.Stderr
 
 	c.Handler.HandleErrors(cmd.Run())
-	c.Handler.HandleErrors(unix.Unmount(c.Props.fsname, 0))
+	c.Handler.HandleErrors(unix.Unmount(c.Props.Fsname, 0))
 
 	c.State.HasChild = true
 }
@@ -91,7 +91,7 @@ func (c *Container) AssignCGroupMemoryAttributes() {
 	os.MkdirAll(filepath.Join(memory, c.Name), mkdirPerm)
 	c.Handler.HandleErrors(
 		// Set the maximum memory for the container
-		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.MemMax), writeFilePerm),
 	)
 }
 
@@ -114,7 +114,7 @@ func (c *Container) CreateCGroup() {
 
 	c.Handler.HandledInvocationGroup(
 		// Set maximum child processes
-		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(c.Props.procMax), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(c.Props.ProcMax), writeFilePerm),
 		// Delete the CGroup if there are no processes running
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/notify_on_release"), []byte("1"), writeFilePerm),
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), writeFilePerm),
