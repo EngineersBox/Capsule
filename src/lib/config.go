@@ -10,8 +10,8 @@ import (
 // Properties ... Global values to constrain containerization
 type Properties struct {
 	fsname  string
-	procMax int
-	memMax  int
+	procMax string
+	memMax  string
 }
 
 // ReadFromJSON ... Parse from structured JSON file to current instance of Properties

@@ -91,7 +91,7 @@ func (c *Container) AssignCGroupMemoryAttributes() {
 	os.MkdirAll(filepath.Join(memory, c.Name), mkdirPerm)
 	c.Handler.HandleErrors(
 		// Set the maximum memory for the container
-		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(strconv.Itoa(c.Props.memMax)), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
 	)
 }
 
@@ -114,7 +114,7 @@ func (c *Container) CreateCGroup() {
 
 	c.Handler.HandledInvocationGroup(
 		// Set maximum child processes
-		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(strconv.Itoa(c.Props.procMax)), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(c.Props.procMax), writeFilePerm),
 		// Delete the CGroup if there are no processes running
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/notify_on_release"), []byte("1"), writeFilePerm),
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), writeFilePerm),
