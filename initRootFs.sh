@@ -10,7 +10,7 @@ else
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # Install docker with brew if on Mac OS X
         brew install docker
-    elif [[ "$OSTYPE" == "linux"* || "$OSTYPE" == "bsd"* ]] then
+    elif [[ "$OSTYPE" == "linux"* || "$OSTYPE" == "bsd"* ]]; then
         # Instacll docker with apt if on Linux or BSD
         apt install docker.io
     else
