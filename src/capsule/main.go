@@ -10,8 +10,23 @@ import (
 )
 
 var (
-	props   capsule.Properties
-	con     *capsule.Container
+	props capsule.Properties
+	con   capsule.Container = capsule.Container{
+		ID:   flattenArgs(uuid.NewRandom())[0].(uuid.UUID),
+		Name: "container",
+		State: capsule.RunState{
+			Running:  false,
+			HasChild: false,
+		},
+		Cls:     rand.Intn(255),
+		Handler: handler,
+		Props:   props,
+		Im: capsule.ImageManager{
+			VolumeLabel: "container",
+			FsDisk:      nil,
+			Fs:          nil,
+		},
+	}
 	handler capsule.Handler = capsule.Handler{
 		ErrorHandler: func(err error) {
 			panic(err)
@@ -20,28 +35,14 @@ var (
 	}
 )
 
+func flattenArgs(a ...interface{}) []interface{} {
+	return a
+}
+
 func main() {
 	props.ReadFromJSON("config/container_properties.json")
 	switch os.Args[1] {
 	case "run":
-		newUUID, err := uuid.NewRandom()
-		handler.HandleErrors(err)
-		con = &capsule.Container{
-			ID:   newUUID,
-			Name: "container",
-			State: capsule.RunState{
-				Running:  false,
-				HasChild: false,
-			},
-			Cls:     rand.Intn(255),
-			Handler: handler,
-			Props:   props,
-			Im: capsule.ImageManager{
-				VolumeLabel: "container",
-				FsDisk:      nil,
-				Fs:          nil,
-			},
-		}
 		con.Run(os.Args)
 	case "child":
 		con.SpawnChild(os.Args)
