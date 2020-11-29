@@ -84,21 +84,14 @@ func (c *Container) SpawnChild(args []string) {
 	c.State.HasChild = true
 }
 
-// MkdirCond ... Create a directory if it does not exist
-func MkdirCond(path string, mode os.FileMode) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		unix.Mkdir(path, uint32(mode))
-	}
-}
-
 // AssignCGroupMemoryAttributes ... Assign attribute values for memory usage and limiting
 func (c *Container) AssignCGroupMemoryAttributes() {
 	memory := filepath.Join(cgroupsDir, "memory")
 	// Create memory sub-directory
-	MkdirCond(filepath.Join(memory, c.Name), mkdirPerm)
+	os.MkdirAll(filepath.Join(memory, c.Name), mkdirPerm)
 	c.Handler.HandleErrors(
 		// Set the maximum memory for the container
-		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(c.Props.memMax), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(memory, c.Name+"memory.limit_in_bytes"), []byte(strconv.Itoa(c.Props.memMax)), writeFilePerm),
 	)
 }
 
@@ -106,10 +99,10 @@ func (c *Container) AssignCGroupMemoryAttributes() {
 func (c *Container) AssignCGroupNetClsAttributes() {
 	netCls := filepath.Join(cgroupsDir, "net_cls")
 	// Create net_cls sub-directory
-	MkdirCond(filepath.Join(netCls, c.Name), mkdirPerm)
+	os.MkdirAll(filepath.Join(netCls, c.Name), mkdirPerm)
 	c.Handler.HandleErrors(
 		// Set the network id to identify packets from this container
-		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(string(c.Cls)), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(netCls, c.Name+"net_cls.classid"), []byte(strconv.Itoa(c.Cls)), writeFilePerm),
 	)
 }
 
@@ -117,17 +110,17 @@ func (c *Container) AssignCGroupNetClsAttributes() {
 func (c *Container) CreateCGroup() {
 	pids := filepath.Join(cgroupsDir, "pids")
 	// Create CGroup sub-directory
-	MkdirCond(filepath.Join(pids, c.Name), mkdirPerm)
+	os.MkdirAll(filepath.Join(pids, c.Name), mkdirPerm)
 
 	c.Handler.HandledInvocationGroup(
 		// Set maximum child processes
-		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(c.Props.procMax), writeFilePerm),
+		ioutil.WriteFile(filepath.Join(pids, c.Name+"/pids.max"), []byte(strconv.Itoa(c.Props.procMax)), writeFilePerm),
 		// Delete the CGroup if there are no processes running
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/notify_on_release"), []byte("1"), writeFilePerm),
 		ioutil.WriteFile(filepath.Join(pids, c.Name+"/cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), writeFilePerm),
 	)
-	c.AssignCGroupMemoryAttributes()
-	c.AssignCGroupNetClsAttributes()
+	// c.AssignCGroupMemoryAttributes()
+	// c.AssignCGroupNetClsAttributes()
 }
 
 // LoadDiskImage ... Load an ISO image to create a containerized image
