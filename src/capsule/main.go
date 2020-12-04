@@ -18,8 +18,8 @@ var (
 	con   capsule.Container  = capsule.Container{
 		ID:   flattenArgs(uuid.NewRandom())[0].(uuid.UUID),
 		Name: props.ContainerName,
-		State: capsule.RunState{
-			Running:  false,
+		State: capsule.ContainerState{
+			Running:  capsule.RunState.Value(0),
 			HasChild: false,
 		},
 		Cls:     rand.Intn(255),

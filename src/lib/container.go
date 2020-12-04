@@ -19,9 +19,12 @@ const (
 	cgroupsDir    string      = "/sys/fs/cgroup/"
 )
 
-// RunState ... Object describing state of a container
-type RunState struct {
-	Running  bool
+// RunState ... Indicates what stage of running the container is in
+var RunState Enum = Enum{[]EnumItem{{0, "Stopped"}, {1, "Starting"}, {2, "Running"}}}
+
+// ContainerState ... Object describing state of a container
+type ContainerState struct {
+	Running  string
 	HasChild bool
 }
 
@@ -29,7 +32,7 @@ type RunState struct {
 type Container struct {
 	ID      uuid.UUID
 	Name    string
-	State   RunState
+	State   ContainerState
 	Cls     int
 	Handler Handler
 	Props   Properties
@@ -59,7 +62,7 @@ func (c *Container) Run(args []string) {
 	cmd.Stderr = os.Stderr
 
 	c.Handler.HandleErrors(cmd.Run())
-	c.State.Running = true
+	c.State.Running = RunState.Value(1)
 }
 
 // SpawnChild ... Spawn a child process within the fs instance created via run()
@@ -81,6 +84,7 @@ func (c *Container) SpawnChild(args []string) {
 	c.Handler.HandleErrors(cmd.Run())
 	c.Handler.HandleErrors(unix.Unmount(c.Props.Fsname, 0))
 
+	c.State.Running = RunState.Value(2)
 	c.State.HasChild = true
 }
 
